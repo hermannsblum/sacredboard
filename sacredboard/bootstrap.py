@@ -39,15 +39,15 @@ app = Flask(__name__)
 @click.option("-F", default="",
               help="Path to directory containing experiment results of the"
                    "File Storage observer. (experimental)")
+@click.option("-p", default=5000,
+              help="Set port of sacredboard. Defaults: 5000")
 @click.option("--no-browser", is_flag=True, default=False,
               help="Do not open web browser automatically.")
 @click.option("--debug", is_flag=True, default=False,
               help="Run the application in Flask debug mode "
                    "(for development).")
-@click.option("--port", default=5000,
-              help="Set port of sacredboard. Defaults: 5000")
 @click.version_option()
-def run(debug, no_browser, m, mu, mc, f):
+def run(debug, no_browser, m, mu, mc, f,p):
     """
     Sacredboard.
 
@@ -102,16 +102,16 @@ sacredboard -m sacred -mc default.runs
     if debug:
         app.run(host="0.0.0.0", debug=True)
     else:
-        for tested_port in range(port, port+50):
+        for port in range(p, p+50):
             http_server = WSGIServer(('0.0.0.0', port), app)
             try:
                 http_server.start()
             except OSError as e:
                 # try next port
                 continue
-            print("Starting sacredboard on port %d" % tested_port)
+            print("Starting sacredboard on port %d" % port)
             if not no_browser:
-                click.launch("http://127.0.0.1:%d" % tested_port)
+                click.launch("http://127.0.0.1:%d" % port)
             http_server.serve_forever()
             break
 
