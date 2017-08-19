@@ -44,6 +44,8 @@ app = Flask(__name__)
 @click.option("--debug", is_flag=True, default=False,
               help="Run the application in Flask debug mode "
                    "(for development).")
+@click.option("--port", default=5000,
+              help="Set port of sacredboard. Defaults: 5000")
 @click.version_option()
 def run(debug, no_browser, m, mu, mc, f):
     """
@@ -100,16 +102,16 @@ sacredboard -m sacred -mc default.runs
     if debug:
         app.run(host="0.0.0.0", debug=True)
     else:
-        for port in range(5000, 5050):
+        for tested_port in range(port, port+50):
             http_server = WSGIServer(('0.0.0.0', port), app)
             try:
                 http_server.start()
             except OSError as e:
                 # try next port
                 continue
-            print("Starting sacredboard on port %d" % port)
+            print("Starting sacredboard on port %d" % tested_port)
             if not no_browser:
-                click.launch("http://127.0.0.1:%d" % port)
+                click.launch("http://127.0.0.1:%d" % tested_port)
             http_server.serve_forever()
             break
 
