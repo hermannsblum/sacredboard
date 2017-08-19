@@ -82,9 +82,10 @@ class FileStorage(DataStorage):
         :return: dict
         :raises FileNotFoundError
         """
-        config = _read_json(_path_to_config(self.path_to_dir, run_id))
-        run = _read_json(_path_to_run(self.path_to_dir, run_id))
-        info = _read_json(_path_to_info(self.path_to_dir, run_id))
+        run_path = run_id.replace(".","/")
+        config = _read_json(_path_to_config(self.path_to_dir, run_path))
+        run = _read_json(_path_to_run(self.path_to_dir, run_path))
+        info = _read_json(_path_to_info(self.path_to_dir, run_path))
         return _create_run(run_id, run, config, info)
 
     def get_runs(self, sort_by=None, sort_direction=None,
@@ -109,6 +110,7 @@ class FileStorage(DataStorage):
             blacklist = set(["_sources"])
             for id in all_run_ids:
                 id = id.replace(self.path_to_dir,"")
+                id = id.replace("/",".")
                 if id in blacklist:
                     continue
                 try:
