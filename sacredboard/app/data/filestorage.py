@@ -101,7 +101,9 @@ class FileStorage(DataStorage):
         :param query: NotImplemented
         :return: FileStoreCursor
         """
-        all_run_ids = os.listdir(self.path_to_dir)
+
+        # Scan trough directories recursively
+        all_run_ids = [dir[0] for dir in os.walk(self.path_to_dir)]
 
         def run_iterator():
             blacklist = set(["_sources"])
@@ -114,6 +116,10 @@ class FileStorage(DataStorage):
                     # An incomplete experiment is a corrupt experiment.
                     # Skip it for now.
                     # TODO
+                    pass
+                except NotADirectoryError:
+                    # Is thrown on Macs if a .DS_STORE folder is found
+                    # Skip it
                     pass
 
         count = len(all_run_ids)
