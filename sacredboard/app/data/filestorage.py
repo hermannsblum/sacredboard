@@ -108,6 +108,7 @@ class FileStorage(DataStorage):
         def run_iterator():
             blacklist = set(["_sources"])
             for id in all_run_ids:
+                id = id.replace(self.path_to_dir,"")
                 if id in blacklist:
                     continue
                 try:
