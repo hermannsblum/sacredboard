@@ -90,10 +90,11 @@ sacredboard -m sacred -mc default.runs
     else:
         print("Must specify either a mongodb instance or " +
               "a path to a file storage.\nRun sacredboard --help "
-              "for more information.", file=sys.stderr)
+              "for more information.")
         sys.exit(1)
 
     app.config['DEBUG'] = debug
+    app.config['port'] = p
     app.debug = debug
     jinja_filters.setup_filters(app)
     routes.setup_routes(app)

@@ -1,5 +1,7 @@
 """Module for managing TensorBoard processes."""
 import re
+from psutil import process_iter
+from signal import SIGTERM
 
 from sacredboard.app.process.process \
     import Process, ProcessError, UnexpectedOutputError
@@ -22,12 +24,13 @@ class TensorboardNotFoundError(ProcessError):
     pass
 
 
-def run_tensorboard(logdir, listen_on="0.0.0.0", tensorboard_args=None):
+def run_tensorboard(logdir, listen_on="0.0.0.0", port=6006, tensorboard_args=None):
     """
     Launch a new TensorBoard instance.
 
     :param logdir: Path to a TensorFlow summary directory
     :param listen_on: The IP address TensorBoard should listen on.
+    :param port: The Port TensorBoard should listen on
     :param tensorboard_args: Additional TensorBoard arguments.
     :return: Returns the port TensorBoard is listening on.
     :raise UnexpectedOutputError
@@ -35,24 +38,20 @@ def run_tensorboard(logdir, listen_on="0.0.0.0", tensorboard_args=None):
     """
     if tensorboard_args is None:
         tensorboard_args = []
+
+    # Kill running process on the port
+    for proc in process_iter():
+        for conns in proc.get_connections(kind='inet'):
+            if conns.laddr[1] == port:
+                proc.send_signal(SIGTERM)  # or SIGKILL
+                continue
+
     tensorboard_instance = Process.create_process(
         TENSORBOARD_BINARY.split(" ") +
-        ["--logdir", logdir, "--host", listen_on] + tensorboard_args)
+        ["--logdir", logdir, "--host", listen_on, "--port", port] + tensorboard_args)
     try:
         tensorboard_instance.run()
     except FileNotFoundError as ex:
         raise TensorboardNotFoundError(ex)
 
-    # Read first line of output from tensorboard - it should contain
-    # the port where it is listening on
-    data = tensorboard_instance.read_line(time_limit=10)
-    search = re.search("on port ([0-9]+)", data)
-    if search is not None:
-        port = search.group(1)
-        return port
-    else:
-        tensorboard_instance.terminate()
-        raise UnexpectedOutputError(
-            data,
-            expected="The port that Tensorboard is listening on."
-        )
+    return port

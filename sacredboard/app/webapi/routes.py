@@ -77,7 +77,7 @@ def run_tensorboard(run_id, tflog_id):
     else:
         path_to_log_dir = base_dir.joinpath(log_dir)
 
-    port = int(tensorboard.run_tensorboard(str(path_to_log_dir)))
+    port = int(tensorboard.run_tensorboard(str(path_to_log_dir))) #,port=int(current_app.config["port"])+1)
     url_root = request.url_root
     url_parts = re.search("://([^:/]+)", url_root)
     redirect_to_address = url_parts.group(1)
