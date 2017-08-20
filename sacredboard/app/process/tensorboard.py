@@ -2,6 +2,7 @@
 import re
 from psutil import process_iter
 from signal import SIGTERM
+import time
 
 from sacredboard.app.process.process \
     import Process, ProcessError, UnexpectedOutputError
@@ -55,5 +56,5 @@ def run_tensorboard(logdir, listen_on="0.0.0.0", port=6006, tensorboard_args=Non
         tensorboard_instance.run()
     except FileNotFoundError as ex:
         raise TensorboardNotFoundError(ex)
-
+    time.sleep(5)
     return port
