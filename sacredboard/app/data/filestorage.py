@@ -73,6 +73,12 @@ class FileStorage(DataStorage):
         self.path_to_dir = os.path.expanduser(path_to_dir)
         self.hash_to_runpath = None
 
+    def _get_run_data(self,run_path):
+        config = _read_json(_path_to_config(run_path))
+        run = _read_json(_path_to_run(run_path))
+        info = _read_json(_path_to_info(run_path))
+        return run, config, info
+
     def get_run(self, run_id):
         """
         Return the run associated with a particular `run_id`.
@@ -86,16 +92,11 @@ class FileStorage(DataStorage):
 
         if run_id in self.hash_to_runpath:
             run_path = self.hash_to_runpath[run_id]
-            run, config, info = _get_run_data(self, run_path)
+            run, config, info = self._get_run_data(run_path)
             return _create_run(run_id, run, config, info)
         else:
             return None
 
-    def _get_run_data(self,run_path):
-        config = _read_json(_path_to_config(run_path))
-        run = _read_json(_path_to_run(run_path))
-        info = _read_json(_path_to_info(run_path))
-        return run, config, info
 
     def _scan_for_runs(self):
         self.hash_to_runpath = {}
