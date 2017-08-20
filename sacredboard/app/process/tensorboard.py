@@ -56,5 +56,5 @@ def run_tensorboard(logdir, listen_on="0.0.0.0", port=6006, tensorboard_args=Non
         tensorboard_instance.run()
     except FileNotFoundError as ex:
         raise TensorboardNotFoundError(ex)
-    time.sleep(5)
+    time.sleep(3)
     return port
