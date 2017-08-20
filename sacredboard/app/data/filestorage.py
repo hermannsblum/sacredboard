@@ -116,8 +116,6 @@ class FileStorage(DataStorage):
                 # Skip all exeptions
                 pass
 
-        self.hash_to_runpath[]
-
     def get_runs(self, sort_by=None, sort_direction=None,
                  start=0, limit=None, query={"type": "and", "filters": []}):
         """
