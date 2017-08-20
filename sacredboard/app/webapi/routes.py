@@ -105,7 +105,7 @@ def handle_tensorboard_timeout(e):
 
 
 @routes.errorhandler(process.UnexpectedOutputError)
-def handle_tensorboard_unexpected_output(e: process.UnexpectedOutputError):
+def handle_tensorboard_unexpected_output(e):
     """Handle Exception: TensorBoard has produced an unexpected output."""
     return "Tensorboard outputted '%s'," \
            " but the information expected was: '%s'. Sorry." \
