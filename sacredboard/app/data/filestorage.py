@@ -3,6 +3,7 @@
 import datetime
 import os
 import json
+import hashlib
 
 from sacredboard.app.data.datastorage import Cursor, DataStorage
 
@@ -10,21 +11,16 @@ CONFIG_JSON = "config.json"
 RUN_JSON = "run.json"
 INFO_JSON = "info.json"
 
-
-def _path_to_file(basepath, run_id, file_name):
-    return os.path.join(basepath, str(run_id), file_name)
-
-
-def _path_to_config(basepath, run_id):
-    return _path_to_file(basepath, str(run_id), CONFIG_JSON)
+def _path_to_config(path):
+    return os.path.join(path, CONFIG_JSON)
 
 
-def _path_to_info(basepath, run_id):
-    return _path_to_file(basepath, str(run_id), INFO_JSON)
+def _path_to_info(path):
+    return os.path.join(path, INFO_JSON)
 
 
-def _path_to_run(basepath, run_id):
-    return os.path.join(basepath, str(run_id), RUN_JSON)
+def _path_to_run(path):
+    return os.path.join(path, RUN_JSON)
 
 
 def _read_json(path_to_json):
@@ -67,12 +63,15 @@ class FileStoreCursor(Cursor):
 
 
 class FileStorage(DataStorage):
+
     """Object to interface with one of sacred's file stores."""
+
 
     def __init__(self, path_to_dir):
         """Initialize file storage run accessor."""
         super().__init__()
         self.path_to_dir = os.path.expanduser(path_to_dir)
+        self.hash_to_runpath = None
 
     def get_run(self, run_id):
         """
@@ -82,11 +81,42 @@ class FileStorage(DataStorage):
         :return: dict
         :raises FileNotFoundError
         """
-        run_path = run_id.replace(".","/")
-        config = _read_json(_path_to_config(self.path_to_dir, run_path))
-        run = _read_json(_path_to_run(self.path_to_dir, run_path))
-        info = _read_json(_path_to_info(self.path_to_dir, run_path))
-        return _create_run(run_id, run, config, info)
+        if self.hash_to_runpath is None:
+            _scan_for_runs()
+
+        if run_id in self.hash_to_runpath:
+            run_path = self.hash_to_runpath[run_id]
+            run, config, info = _get_run_data(self, run_path)
+            return _create_run(run_id, run, config, info)
+        else:
+            return None
+
+    def _get_run_data(self,run_path):
+        config = _read_json(_path_to_config(run_path))
+        run = _read_json(_path_to_run(run_path))
+        info = _read_json(_path_to_info(run_path))
+        return run, config, info
+
+    def _scan_for_runs(self):
+        self.hash_to_runpath = {}
+        # Scan trough directories recursively
+        all_dirs = [dir[0] for dir in os.walk(self.path_to_dir)]
+
+        for run_dir in all_dirs:
+            run_id = hashlib.sha1(run_dir.encode("UTF-8")).hexdigest()[:7]
+            try:
+                self._get_run_data(run_dir)
+                self.hash_to_runpath[run_id] = run_dir
+            except FileNotFoundError:
+                # An incomplete experiment is a corrupt experiment.
+                # Skip it for now.
+                # TODO
+                pass
+            except Exception:
+                # Skip all exeptions
+                pass
+
+        self.hash_to_runpath[]
 
     def get_runs(self, sort_by=None, sort_direction=None,
                  start=0, limit=None, query={"type": "and", "filters": []}):
@@ -103,18 +133,12 @@ class FileStorage(DataStorage):
         :return: FileStoreCursor
         """
 
-        # Scan trough directories recursively
-        all_run_ids = [dir[0] for dir in os.walk(self.path_to_dir)]
+        self._scan_for_runs()
 
         def run_iterator():
-            blacklist = set(["_sources"])
-            for id in all_run_ids:
-                id = id.replace(self.path_to_dir,"")
-                id = id.replace("/",".")
-                if id in blacklist:
-                    continue
+            for run_id in self.hash_to_runpath.keys():
                 try:
-                    yield self.get_run(id)
+                    yield self.get_run(run_id)
                 except FileNotFoundError:
                     # An incomplete experiment is a corrupt experiment.
                     # Skip it for now.
@@ -125,5 +149,5 @@ class FileStorage(DataStorage):
                     # Skip it
                     pass
 
-        count = len(all_run_ids)
+        count = len(self.hash_to_runpath.keys())
         return FileStoreCursor(count, run_iterator())
