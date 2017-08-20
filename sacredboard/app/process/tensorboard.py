@@ -50,7 +50,7 @@ def run_tensorboard(logdir, listen_on="0.0.0.0", port=6006, tensorboard_args=Non
 
     tensorboard_instance = Process.create_process(
         TENSORBOARD_BINARY.split(" ") +
-        ["--logdir", logdir, "--host", listen_on, "--port", port] + tensorboard_args)
+        ["--logdir", logdir, "--host", listen_on, "--port", str(port)] + tensorboard_args)
     try:
         tensorboard_instance.run()
     except FileNotFoundError as ex:
