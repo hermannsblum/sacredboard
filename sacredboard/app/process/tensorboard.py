@@ -20,7 +20,6 @@ def stop_all_tensorboards():
 
 class TensorboardNotFoundError(ProcessError):
     """TensorBoard binary not found."""
-
     pass
 
 
@@ -41,10 +40,13 @@ def run_tensorboard(logdir, listen_on="0.0.0.0", port=6006, tensorboard_args=Non
 
     # Kill running process on the port
     for proc in process_iter():
-        for conns in proc.get_connections(kind='inet'):
-            if conns.laddr[1] == port:
-                proc.send_signal(SIGTERM)  # or SIGKILL
-                continue
+        try:
+            for conns in proc.connections(kind='inet'):
+                if conns.laddr[1] == port:
+                    proc.send_signal(SIGTERM)  # or SIGKILL
+                    continue
+        except Exception:
+            pass
 
     tensorboard_instance = Process.create_process(
         TENSORBOARD_BINARY.split(" ") +
