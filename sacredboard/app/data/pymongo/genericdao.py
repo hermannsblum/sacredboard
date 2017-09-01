@@ -5,6 +5,7 @@ Issue: https://github.com/chovanecm/sacredboard/issues/61
 """
 import pymongo
 from pymongo.errors import InvalidName
+from gridfs import GridFS
 
 from sacredboard.app.data import DataSourceError
 from .mongocursor import MongoDbCursor
@@ -28,6 +29,7 @@ class GenericDAO:
         """
         self._client = pymongo_client
         self._database = self._get_database(database_name)
+        self._fs = GridFS(self._database)
 
     def find_record(self, collection_name, query):
         """
@@ -114,3 +116,6 @@ class GenericDAO:
         else:
             sort = pymongo.ASCENDING
         return cursor.sort(sort_by, sort)
+
+    def get_artifact(self, artifact_id):
+        return self.fs.get(artifact_id)

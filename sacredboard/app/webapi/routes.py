@@ -2,6 +2,7 @@
 """Define HTTP endpoints for the Sacredboard Web API."""
 import re
 from pathlib import Path
+import os
 
 from flask import Blueprint
 from flask import current_app
@@ -76,6 +77,19 @@ def run_tensorboard(run_id, tflog_id):
         path_to_log_dir = log_dir
     else:
         path_to_log_dir = base_dir.joinpath(log_dir)
+
+    if not os.path.exists(path_to_log_dir):
+        # This run was not on this machine
+        path_to_log_dir = '/tmp/sacredboard'
+        os.mkdir(path_to_log_dir)
+        # Add a subfolder for this run id
+        path_to_log_dir += '/{}'.format(run_id)
+        os.mkdir(path_to_log_dir)
+        # copy all artifacts there
+        for artifact in run['artifacts']:
+            file = data.get_artifact(artifact['file_id'])
+            with open(os.path.join(path_to_log_dir, file.filename), 'wb') as f:
+                f.write(file.read())
 
     port = int(tensorboard.run_tensorboard(str(path_to_log_dir), port=int(current_app.config["port"])+1))
     url_root = request.url_root
