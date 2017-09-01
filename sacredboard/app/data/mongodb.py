@@ -2,6 +2,7 @@
 """Accesses data in Sacred's MongoDB."""
 import bson
 import pymongo
+from gridfs import GridFS
 
 from sacredboard.app.data.datastorage import Cursor, DataStorage
 from sacredboard.app.data.pymongo import GenericDAO, MongoMetricsDAO
@@ -51,6 +52,7 @@ class PyMongoDataAccess(DataStorage):
         self._client = self._create_client()
         self._db = getattr(self._client, self._db_name)
         self._generic_dao = GenericDAO(self._client, self._db_name)
+        self._fs = GridFS(self._db)
 
     def _create_client(self):
         """Return a new Mongo Client."""
@@ -266,3 +268,6 @@ class PyMongoDataAccess(DataStorage):
         :return MetricsDAO
         """
         return MongoMetricsDAO(self._generic_dao)
+
+    def get_artifact(self, artifact_id):
+        return self._fs.get(artifact_id)
