@@ -89,7 +89,8 @@ def run_tensorboard(run_id, tflog_id):
         # copy all artifacts there
         for artifact in run['artifacts']:
             file = data.get_artifact(artifact['file_id'])
-            with open(os.path.join(runfolder, file.filename), 'wb') as f:
+            basename = file.filename.split('/')[-1]
+            with open(os.path.join(runfolder, basename), 'wb') as f:
                 f.write(file.read())
 
     port = int(tensorboard.run_tensorboard(str(path_to_log_dir), port=int(current_app.config["port"])+1))
