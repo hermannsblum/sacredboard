@@ -78,6 +78,7 @@ def run_tensorboard(run_id, tflog_id):
     else:
         path_to_log_dir = base_dir.joinpath(log_dir)
 
+    path_to_log_dir = str(path_to_log_dir)
     if not os.path.exists(path_to_log_dir):
         # This run was not on this machine
         path_to_log_dir = '/tmp/sacredboard'
