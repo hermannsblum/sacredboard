@@ -82,14 +82,14 @@ def run_tensorboard(run_id, tflog_id):
     if not os.path.exists(path_to_log_dir):
         # This run was not on this machine
         path_to_log_dir = '/tmp/sacredboard'
-        os.mkdir(path_to_log_dir)
         # Add a subfolder for this run id
-        path_to_log_dir += '/{}'.format(run_id)
-        os.mkdir(path_to_log_dir)
+        runfolder = path_to_log_dir + '/{}'.format(run_id)
+        if not os.path.exists(runfolder):
+            os.makedirs(runfolder)
         # copy all artifacts there
         for artifact in run['artifacts']:
             file = data.get_artifact(artifact['file_id'])
-            with open(os.path.join(path_to_log_dir, file.filename), 'wb') as f:
+            with open(os.path.join(runfolder, file.filename), 'wb') as f:
                 f.write(file.read())
 
     port = int(tensorboard.run_tensorboard(str(path_to_log_dir), port=int(current_app.config["port"])+1))
