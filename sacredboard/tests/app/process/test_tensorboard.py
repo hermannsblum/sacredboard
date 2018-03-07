@@ -14,7 +14,7 @@ sacredboard.app.process.tensorboard.TENSORBOARD_BINARY = "python %s/tensorboard.
 @py.mark.timeout(15)
 def test_run_tensorboard():
     port = sacredboard.app.process.tensorboard.run_tensorboard("/tmp/logdir")
-    assert port == "6006"
+    assert port == 6006
 
 
 @py.mark.timeout(15)
