@@ -4,6 +4,8 @@ import bson
 import pymongo
 from gridfs import GridFS
 
+from tensorflow.python.summary.summary_iterator import summary_iterator
+
 from sacredboard.app.data.datastorage import Cursor, DataStorage
 from sacredboard.app.data.pymongo import GenericDAO, MongoMetricsDAO
 
@@ -52,7 +54,6 @@ class PyMongoDataAccess(DataStorage):
         self._client = self._create_client()
         self._db = getattr(self._client, self._db_name)
         self._generic_dao = GenericDAO(self._client, self._db_name)
-        self._fs = GridFS(self._db)
 
     def _create_client(self):
         """Return a new Mongo Client."""
@@ -117,6 +118,33 @@ class PyMongoDataAccess(DataStorage):
         run = None
         for c in cursor:
             run = c
+
+        # Now go through all the artifacts and see if there are tensorflow summaries
+        metric_artifacts = [artifact for artifact in run['artifacts']
+                            if 'events.out.tfevents' in artifact['name']]
+        for artifact in metric_artifacts:
+            tmp_file = '/tmp/summary'
+            with open(tmp_file, 'wb') as f:
+                f.write(self._generic_dao.get_artifact(artifact['file_id']).read())
+            iterator = summary_iterator(tmp_file)
+
+            # go through the first values until the first tag repeats (cannot scan the
+            # whole summary for performance reasons)
+            tags = []
+            now_break = False
+            for event in iterator:
+                for measurement in event.summary.value:
+                    if measurement.tag not in tags:
+                        tags.append(measurement.tag)
+                    else:
+                        now_break = True
+                        break
+                if now_break:
+                    break
+            for tag in tags:
+                run.setdefault('info', {}).setdefault('metrics', []).append({
+                    'name': tag, 'id': 'tfsummary_{}_{}'.format(artifact['file_id'],
+                                                                tag)})
         return run
 
     @staticmethod
@@ -268,6 +296,3 @@ class PyMongoDataAccess(DataStorage):
         :return MetricsDAO
         """
         return MongoMetricsDAO(self._generic_dao)
-
-    def get_artifact(self, artifact_id):
-        return self._fs.get(artifact_id)

@@ -6,6 +6,9 @@ Issue: https://github.com/chovanecm/sacredboard/issues/60
 
 from bson import ObjectId
 from bson.errors import InvalidId
+from datetime import datetime
+
+from tensorflow.python.summary.summary_iterator import summary_iterator
 
 from sacredboard.app.data import NotFoundError
 from .genericdao import GenericDAO
@@ -48,7 +51,14 @@ class MongoMetricsDAO(MetricsDAO):
 
         :raise NotFoundError
         """
-        query = self._build_query(run_id, metric_id)
+        print(metric_id)
+        try:
+            query = self._build_query(run_id, metric_id)
+        except NotFoundError as ex:
+            if metric_id.startswith('tfsummary'):
+                return self._read_tf_summary(run_id, metric_id)
+            else:
+                raise ex
         row = self._read_metric_from_db(metric_id, run_id, query)
         metric = self._to_intermediary_object(row)
         return metric
@@ -77,4 +87,33 @@ class MongoMetricsDAO(MetricsDAO):
             "steps": row["steps"],
             "timestamps": row["timestamps"],
             "values": row["values"],
+        }
+
+    def _read_tf_summary(self, run_id, metric_id):
+        _, file_id, tag = metric_id.split('_')
+
+        # load the summary file
+        tmp_file = '/tmp/summary'
+        with open(tmp_file, 'wb') as f:
+            f.write(self.generic_dao.get_artifact(file_id).read())
+        iterator = summary_iterator(tmp_file)
+
+        # go through the first values until the first tag repeats (cannot scan the
+        # whole summary for performance reasons)
+        steps = []
+        timestamps = []
+        values = []
+        for event in iterator:
+            for measurement in event.summary.value:
+                if measurement.tag == tag:
+                    steps.append(event.step)
+                    values.append(measurement.simple_value)
+                    timestamps.append(datetime.fromtimestamp(event.wall_time))
+        return {
+            'metric_id': metric_id,
+            'run_id': run_id,
+            'name': tag,
+            'steps': steps,
+            'timestamps': timestamps,
+            'values': values
         }
