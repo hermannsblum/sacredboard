@@ -6,6 +6,7 @@ Issue: https://github.com/chovanecm/sacredboard/issues/61
 import pymongo
 from pymongo.errors import InvalidName
 from gridfs import GridFS
+from bson.objectid import ObjectId
 
 from sacredboard.app.data import DataSourceError
 from .mongocursor import MongoDbCursor
@@ -79,7 +80,7 @@ class GenericDAO:
         :raise DataSourceError
         """
         try:
-            return pymongo.database.Database(self._client, database_name)
+            return self._client[database_name]
         except InvalidName as ex:
             raise DataSourceError("Cannot connect to database %s!"
                                   % self._database) from ex
@@ -118,4 +119,6 @@ class GenericDAO:
         return cursor.sort(sort_by, sort)
 
     def get_artifact(self, artifact_id):
-        return self.fs.get(artifact_id)
+        if not isinstance(artifact_id, ObjectId):
+            artifact_id = ObjectId(artifact_id)
+        return self._fs.get(artifact_id)
