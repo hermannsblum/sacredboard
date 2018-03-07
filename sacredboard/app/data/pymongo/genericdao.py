@@ -79,7 +79,7 @@ class GenericDAO:
         :raise DataSourceError
         """
         try:
-            return self._client[database_name]
+            return pymongo.database.Database(self._client, database_name)
         except InvalidName as ex:
             raise DataSourceError("Cannot connect to database %s!"
                                   % self._database) from ex
