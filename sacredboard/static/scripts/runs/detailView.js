@@ -18,40 +18,37 @@ define(
         function generateDetailView(run) {
             // `run` is the original data object for the row
             var tabs = `
-            <div class="container-fluid detail-view">
-            <div class="row">
-            <div class="col-md-10 col-md-offset-2">
-                <h3>Details for: ` + escapeHtml(run.experiment_name) + " <small>(id: " + escapeHtml(run.id) + `)</small></h3>
+            <div class="detail-view">
+            <div class="detail-title">
+                <h3>` + escapeHtml(run.experiment_name) + " <small>(id: " + escapeHtml(run.id) + `)</small></h3>
             </div>
-            </div>
-            <div class="row">
-                <div class="col-md-2">
-                      <ul class="nav nav-pills nav-stacked">
-                        <li role="presentation" class="active">
-                            <a href="#experiment-config-` + escapeHtml(run.id) + `" data-toggle="pill">Config</a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#experiment-info-` + escapeHtml(run.id) + `" data-toggle="pill">Run info</a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#captured-output-` + escapeHtml(run.id) + `" data-toggle="pill">Captured output</a>
-                        </li>                        
-                        <li role="presentation">
-                            <a href="#experiment-experiment-` + escapeHtml(run.id) + `" data-toggle="pill">Experiment</a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#experiment-meta-` + escapeHtml(run.id) + `" data-toggle="pill">Meta Info</a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#tensorflow-` + escapeHtml(run.id) + `" data-toggle="pill">Tensorflow logs</a>
-                        </li>
-                        <li role="presentation">
-                            <a href="#metrics-` + escapeHtml(run.id) + `" data-toggle="pill">Metrics plots</a>
-                        </li>
-                      </ul>
-                  </div>
-                  <div class="tab-content col-md-10">
-                      <div id="experiment-config-` + escapeHtml(run.id) + `" class="tab-pane active table-responsive">
+            <div class="detail-menu">
+                  <ul class="nav nav-pills nav-stacked">
+                    <li role="presentation" class="active">
+                        <a href="#experiment-config-` + escapeHtml(run.id) + `" data-toggle="pill">Config</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#experiment-info-` + escapeHtml(run.id) + `" data-toggle="pill">Run info</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#captured-output-` + escapeHtml(run.id) + `" data-toggle="pill">Captured output</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#experiment-experiment-` + escapeHtml(run.id) + `" data-toggle="pill">Experiment</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#experiment-meta-` + escapeHtml(run.id) + `" data-toggle="pill">Meta Info</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#tensorflow-` + escapeHtml(run.id) + `" data-toggle="pill">Tensorflow logs</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#metrics-` + escapeHtml(run.id) + `" data-toggle="pill">Metrics plots</a>
+                    </li>
+                  </ul>
+              </div>
+              <div class="detail-content tab-content">
+                  <div id="experiment-config-` + escapeHtml(run.id) + `" class="tab-pane active table-responsive">
                       <h4>Run configuration</h4>
                       <div class="detail-page-box">
                             <dictionary-browser params="value: run.object.config"></dictionary-browser>
@@ -75,22 +72,22 @@ define(
                             <dictionary-browser params="value: run.object.meta"></dictionary-browser>
                         </div>
                   </div>
-                      <div id="captured-output-` + escapeHtml(run.id) + `" class="tab-pane">
+                      <div id="captured-output-` + escapeHtml(run.id) + `" class="tab-pane table-responsive">
                       <h4>Captured output from the experiment</h4>
-                        <pre class="scrollDown detail-page-box" sacred-content="captured_out">`
+                        <pre class="detail-page-box" sacred-content="captured_out">`
                 + escapeHtml(run.object.captured_out) + `</pre>
-                      </div>
-                      <div id="tensorflow-` + escapeHtml(run.id) + `"  class="tab-pane">
-                        <h4>Tensorflow logs</h4>
-                        <div class="detail-page-box">
-                            __TENSORFLOW_LOGDIRS__
-                        </div>
-                      </div>
-                       <div id="metrics-` + escapeHtml(run.id) + `"  class="tab-pane">
-                        <div class="detail-page-box">
-                            <metrics-viewer params="run: run.object"></metrics-viewer>
-                        </div>
-                      </div>
+                  </div>
+                  <div id="tensorflow-` + escapeHtml(run.id) + `"  class="tab-pane">
+                    <h4>Tensorflow logs</h4>
+                    <div class="detail-page-box">
+                        __TENSORFLOW_LOGDIRS__
+                    </div>
+                  </div>
+                   <div id="metrics-` + escapeHtml(run.id) + `"  class="tab-pane">
+                    <div class="detail-page-box">
+                        <metrics-viewer params="run: run.object"></metrics-viewer>
+                    </div>
+                  </div>
                   </div>
                 </div>
             </div>
